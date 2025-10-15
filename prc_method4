@@ -1,4 +1,5 @@
-CREATE OR REPLACE PROCEDURE prc_method4(p_table_name IN VARCHAR2) IS
+CREATE OR REPLACE PROCEDURE prc_method4(p_table_name IN VARCHAR2,
+                                        p_where_clause IN VARCHAR2 DEFAULT NULL) IS
     TYPE t_columns IS TABLE OF user_tab_columns%ROWTYPE INDEX BY PLS_INTEGER;
     v_columns             t_columns;
     v_columns_with_commas VARCHAR2(32767);
@@ -7,6 +8,7 @@ CREATE OR REPLACE PROCEDURE prc_method4(p_table_name IN VARCHAR2) IS
     v_date_value          DATE;
     v_output_string       VARCHAR2(32767);
     cur_dynamic           INTEGER;
+    v_sql                 VARCHAR2(32767);
 
     -- Local functions for datatype checking
     FUNCTION is_number(p_datatype VARCHAR2) RETURN BOOLEAN IS
@@ -34,8 +36,14 @@ BEGIN
         v_columns_with_commas := v_columns_with_commas || ',' || v_columns(i).column_name;
     END LOOP;
 
+     -- Build dynamic SQL with optional WHERE clause
+    v_sql := 'SELECT ' || v_columns_with_commas || ' FROM ' || p_table_name;
+    IF p_where_clause IS NOT NULL THEN
+        v_sql := v_sql || ' WHERE ' || p_where_clause;
+    END IF;
+
     cur_dynamic := DBMS_SQL.OPEN_CURSOR;
-    DBMS_SQL.PARSE(cur_dynamic, 'SELECT ' || v_columns_with_commas || ' FROM ' || p_table_name, DBMS_SQL.NATIVE);
+    DBMS_SQL.PARSE(cur_dynamic,v_sql, DBMS_SQL.NATIVE);
 
     FOR idx IN 1 .. v_columns.COUNT LOOP
         IF is_number(v_columns(idx).data_type) THEN
