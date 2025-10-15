@@ -1,0 +1,8 @@
+-- Print all rows from the employees table
+EXEC prc_method4('employees');
+
+-- Filter dynamically 
+EXEC prc_method4('employees', 'job_id = ''IT_PROG''');
+
+-- More complex filter
+EXEC prc_method4('employees', 'salary > 10000 AND department_id = 80');
